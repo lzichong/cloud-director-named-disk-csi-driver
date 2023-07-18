@@ -7,7 +7,6 @@ import (
 	"github.com/vmware/cloud-director-named-disk-csi-driver/pkg/vcdtypes"
 	"github.com/vmware/cloud-director-named-disk-csi-driver/tests/utils"
 	"github.com/vmware/cloud-provider-for-cloud-director/pkg/testingsdk"
-	"github.com/vmware/go-vcloud-director/v2/govcd"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -118,6 +117,10 @@ var _ = Describe("CSI static provisioning Test", func() {
 		err = utils.DeletePVC(ctx, tc.Cs.(*kubernetes.Clientset), testStaticNameSpace, testStaticPVCName)
 		Expect(err).NotTo(HaveOccurred())
 
+		By("should wait until Disk deleted within the time constraint")
+		err = utils.WaitDiskDeleteViaVCD(tc.VcdClient, testDiskName)
+		Expect(err).NotTo(HaveOccurred())
+
 		By("PV should be not presented in Kubernetes")
 		pvDeleted, err = utils.WaitForPVDeleted(ctx, tc.Cs.(*kubernetes.Clientset), testDiskName)
 		Expect(pvDeleted).To(BeTrue())
@@ -125,12 +128,6 @@ var _ = Describe("CSI static provisioning Test", func() {
 		pv, err = utils.GetPV(ctx, tc.Cs.(*kubernetes.Clientset), testDiskName)
 		Expect(err).To(HaveOccurred())
 		Expect(pv).To(BeNil())
-
-		By("PV should not be present in VCD")
-		vcdDisk, err := utils.GetDiskByNameViaVCD(tc.VcdClient, testDiskName)
-		Expect(err).To(HaveOccurred())
-		Expect(err).To(MatchError(govcd.ErrorEntityNotFound))
-		Expect(vcdDisk).To(BeNil())
 
 		By("PV should not be shown in RDE")
 		pvFound, err := utils.GetPVByNameViaRDE(testDiskName, tc, "named-disk")

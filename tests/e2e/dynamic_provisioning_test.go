@@ -230,6 +230,7 @@ var _ = Describe("CSI dynamic provisioning Test", func() {
 
 	//scenario 2: use 'Delete' retention policy. step2: install a deployment using the above PVC.
 	It("Should create Deployment using delete reclaim policy", func() {
+		By("Creating a deployment with delete policy in storage class")
 		deployment, err := tc.CreateDeployment(ctx, &testingsdk.DeployParams{
 			Name: testDeploymentName,
 			Labels: map[string]string{
@@ -248,12 +249,14 @@ var _ = Describe("CSI dynamic provisioning Test", func() {
 		}, testNameSpaceName)
 		Expect(deployment).NotTo(BeNil())
 		Expect(err).NotTo(HaveOccurred())
+
+		By("PVC status should be 'bound'")
 		err = utils.WaitForPvcReady(ctx, tc.Cs.(*kubernetes.Clientset), testNameSpaceName, testDeletePVCName)
 		Expect(err).NotTo(HaveOccurred())
-		By("PVC status should be 'bound'")
+
+		By("Deployment should be ready")
 		err = tc.WaitForDeploymentReady(ctx, testNameSpaceName, testDeletePVCName)
 		Expect(err).NotTo(HaveOccurred())
-		By("Deployment should be ready")
 	})
 
 	//scenario 2: use 'Delete' retention policy. step3: verify the PV is not presented after PVC deleted.
