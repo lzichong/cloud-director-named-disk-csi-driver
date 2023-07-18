@@ -104,7 +104,7 @@ var _ = Describe("CSI dynamic provisioning Test", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		By("Deployment should be ready")
-		err = tc.WaitForDeploymentReady(ctx, testNameSpaceName, testDeploymentName)
+		err = utils.WaitForDeploymentReady(ctx, tc, testNameSpaceName, testDeploymentName)
 		Expect(err).NotTo(HaveOccurred())
 		options := metav1.ListOptions{
 			LabelSelector: fmt.Sprintf("app=%s", testDeploymentName),
