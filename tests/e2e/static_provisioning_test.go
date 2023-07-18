@@ -89,7 +89,7 @@ var _ = Describe("CSI static provisioning Test", func() {
 			},
 			ContainerParams: testingsdk.ContainerParams{
 				ContainerName:  "nginx",
-				ContainerImage: "nginx:1.14.2",
+				ContainerImage: "harbor-repo.vmware.com/vcloud/nginx:1.14.2",
 				ContainerPort:  80,
 			},
 			VolumeParams: testingsdk.VolumeParams{
@@ -176,7 +176,7 @@ var _ = Describe("CSI static provisioning Test", func() {
 			},
 			ContainerParams: testingsdk.ContainerParams{
 				ContainerName:  "nginx",
-				ContainerImage: "nginx:1.14.2",
+				ContainerImage: "harbor-repo.vmware.com/vcloud/nginx:1.14.2",
 				ContainerPort:  80,
 			},
 			VolumeParams: testingsdk.VolumeParams{
