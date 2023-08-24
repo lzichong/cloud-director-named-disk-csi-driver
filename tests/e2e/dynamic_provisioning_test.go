@@ -119,7 +119,7 @@ var _ = Describe("CSI dynamic provisioning Test", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		By("Deployment should be ready")
-		err = tc.WaitForDeploymentReady(ctx, testNameSpaceName, testDeploymentName)
+		err = utils.WaitForDeploymentReady(ctx, tc, testNameSpaceName, testDeploymentName)
 		Expect(err).NotTo(HaveOccurred())
 	})
 
@@ -243,7 +243,7 @@ var _ = Describe("CSI dynamic provisioning Test", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		By("Deployment should be ready")
-		err = tc.WaitForDeploymentReady(ctx, testNameSpaceName, testDeploymentName)
+		err = utils.WaitForDeploymentReady(ctx, tc, testNameSpaceName, testDeploymentName)
 		Expect(err).NotTo(HaveOccurred())
 	})
 

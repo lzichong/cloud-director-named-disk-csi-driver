@@ -94,7 +94,7 @@ var _ = Describe("CSI static provisioning Test", func() {
 			Expect(deployment).NotTo(BeNil())
 		}
 		By("Deployment should be ready")
-		err = tc.WaitForDeploymentReady(ctx, testStaticNameSpace, testDeploymentName)
+		err = utils.WaitForDeploymentReady(ctx, tc, testStaticNameSpace, testDeploymentName)
 		Expect(err).NotTo(HaveOccurred())
 	})
 
@@ -173,7 +173,7 @@ var _ = Describe("CSI static provisioning Test", func() {
 		}
 
 		By("pods of the deployment should come up.")
-		err = tc.WaitForDeploymentReady(ctx, testStaticNameSpace, testDeploymentName)
+		err = utils.WaitForDeploymentReady(ctx, tc, testStaticNameSpace, testDeploymentName)
 		Expect(err).NotTo(HaveOccurred())
 	})
 

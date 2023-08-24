@@ -402,3 +402,45 @@ func CreateDeployment(ctx context.Context, tc *testingsdk.TestClient, deployment
 		},
 	}, ns)
 }
+
+func WaitForDeploymentReady(ctx context.Context, tc *testingsdk.TestClient, nameSpace string, deployName string) error {
+	err := waitForDeploymentReady(ctx, tc.Cs.(*kubernetes.Clientset), nameSpace, deployName)
+	if err != nil {
+		return fmt.Errorf("error querying Deployment [%s] status for cluster [%s(%s)]: [%v]", deployName, tc.ClusterName, tc.ClusterId, err)
+	}
+	return nil
+}
+
+func waitForDeploymentReady(ctx context.Context, k8sClient *kubernetes.Clientset, nameSpace string, deployName string) error {
+	err := wait.PollImmediate(10*time.Second, 600*time.Second, func() (bool, error) {
+		options := metav1.ListOptions{
+			LabelSelector: fmt.Sprintf("app=%s", deployName),
+		}
+		podList, err := k8sClient.CoreV1().Pods(nameSpace).List(ctx, options)
+		if err != nil {
+			if testingsdk.IsRetryableError(err) {
+				return false, nil
+			}
+			return false, fmt.Errorf("unexpected error occurred while getting deployment [%s]", deployName)
+		}
+		podCount := len(podList.Items)
+
+		ready := 0
+		for _, pod := range (*podList).Items {
+			// When pod is 'running', it could mean the container is either running, or starting, but may not be completely started yet.
+			if pod.Status.Phase == apiv1.PodRunning {
+				for _, container := range pod.Status.ContainerStatuses {
+					if container.Ready {
+						ready++
+					}
+				}
+			}
+		}
+		if ready < podCount {
+			fmt.Printf("running pods: %v < %v\n", ready, podCount)
+			return false, nil
+		}
+		return true, nil
+	})
+	return err
+}
