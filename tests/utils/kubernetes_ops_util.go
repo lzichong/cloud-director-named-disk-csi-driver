@@ -424,7 +424,6 @@ func waitForDeploymentReady(ctx context.Context, k8sClient *kubernetes.Clientset
 			return false, fmt.Errorf("unexpected error occurred while getting deployment [%s]", deployName)
 		}
 		podCount := len(podList.Items)
-
 		ready := 0
 		for _, pod := range (*podList).Items {
 			// When pod is 'running', it could mean the container is either running, or starting, but may not be completely started yet.
@@ -436,6 +435,12 @@ func waitForDeploymentReady(ctx context.Context, k8sClient *kubernetes.Clientset
 				}
 			}
 		}
+
+		if podCount == 0 {
+			fmt.Printf("no pods ready yet: %v\n", podCount)
+			return false, nil
+		}
+
 		if ready < podCount {
 			fmt.Printf("running pods: %v < %v\n", ready, podCount)
 			return false, nil
