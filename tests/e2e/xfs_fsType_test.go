@@ -3,7 +3,7 @@ package e2e
 import (
 	"context"
 	"fmt"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/vmware/cloud-director-named-disk-csi-driver/tests/utils"
 	"github.com/vmware/cloud-provider-for-cloud-director/pkg/testingsdk"
@@ -30,11 +30,13 @@ var _ = Describe("CSI dynamic provisioning Test", func() {
 		UserOrg:      userOrg,
 		GetVdcClient: true,
 	}, rdeId)
-	Expect(err).NotTo(HaveOccurred())
-	Expect(tc).NotTo(BeNil())
-	Expect(&tc.Cs).NotTo(BeNil())
 
 	ctx := context.TODO()
+
+	BeforeEach(func() {
+		Expect(tc).NotTo(BeNil())
+		Expect(&tc.Cs).NotTo(BeNil())
+	})
 
 	// step 1: create the testing nameSpace and xfs storage class
 	It("Should create the name space AND xfs storage classes", func() {
