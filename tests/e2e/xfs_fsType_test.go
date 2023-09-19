@@ -3,7 +3,7 @@ package e2e
 import (
 	"context"
 	"fmt"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/vmware/cloud-director-named-disk-csi-driver/tests/utils"
 	"github.com/vmware/cloud-provider-for-cloud-director/pkg/testingsdk"
@@ -15,29 +15,32 @@ import (
 const xfsFsType = "xfs"
 const mountPath = "/data"
 
-var _ = Describe("CSI dynamic provisioning Test", func() {
+var _ = Describe("CSI XFS Filesystem Test", func() {
 	var (
 		tc            *testingsdk.TestClient
 		err           error
 		dynamicPVName string
 	)
-	tc, err = testingsdk.NewTestClient(&testingsdk.VCDAuthParams{
-		Host:         host,
-		OvdcName:     ovdc,
-		OrgName:      org,
-		Username:     userName,
-		RefreshToken: refreshToken,
-		UserOrg:      userOrg,
-		GetVdcClient: true,
-	}, rdeId)
-	Expect(err).NotTo(HaveOccurred())
-	Expect(tc).NotTo(BeNil())
-	Expect(&tc.Cs).NotTo(BeNil())
 
 	ctx := context.TODO()
 
+	BeforeEach(func() {
+		tc, err = testingsdk.NewTestClient(&testingsdk.VCDAuthParams{
+			Host:         host,
+			OvdcName:     ovdc,
+			OrgName:      org,
+			Username:     userName,
+			RefreshToken: refreshToken,
+			UserOrg:      userOrg,
+			GetVdcClient: true,
+		}, rdeId)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(tc).NotTo(BeNil())
+		Expect(&tc.Cs).NotTo(BeNil())
+	})
+
 	// step 1: create the testing nameSpace and xfs storage class
-	It("Should create the name space AND xfs storage classes", func() {
+	It("Should create the name space AND xfs storage classes with delete reclaim policy", func() {
 		ns, err := tc.CreateNameSpace(ctx, testNameSpaceName)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ns).NotTo(BeNil())
@@ -47,7 +50,7 @@ var _ = Describe("CSI dynamic provisioning Test", func() {
 	})
 
 	// step 2: create the PVC and PV based on xfs storage class
-	It("should create PVC and PV using retain reclaim policy", func() {
+	It("should create PVC and PV using delete reclaim policy", func() {
 		By("should create the PVC successfully")
 		pvc, err := utils.CreatePVC(ctx, tc.Cs.(*kubernetes.Clientset), testNameSpaceName, testDeletePVCName, storageClassXfs, storageSize)
 		Expect(err).NotTo(HaveOccurred())
@@ -79,7 +82,7 @@ var _ = Describe("CSI dynamic provisioning Test", func() {
 	})
 
 	// step 3: install a deployment using the above PVC. Check the filesystem type the disk mounted
-	It("should install a deployment using the above PVC", func() {
+	It("should install a deployment using the recently created PVC with delete reclaim policy and check filesystem type", func() {
 		By("should create a deployment successfully")
 		deployment, err := utils.CreateDeployment(ctx, tc, testDeploymentName, utils.NginxDeploymentVolumeName, ContainerImage, testDeletePVCName, utils.DataMountPath, testNameSpaceName)
 		Expect(err).NotTo(HaveOccurred())
@@ -100,6 +103,7 @@ var _ = Describe("CSI dynamic provisioning Test", func() {
 		Expect(podList).NotTo(BeNil())
 		By(fmt.Sprintf("find the pod [%s] of the deployment [%s]", podList.Items[0].Name, testDeploymentName))
 
+		By("checking the filesystem type to be xfs")
 		output, err := utils.ExecCmdExample(tc.Cs, tc.Config, testNameSpaceName, podList.Items[0].Name, []string{"df -Th"})
 		Expect(err).NotTo(HaveOccurred())
 		fsTypeFound, err := utils.FindFsTypeWithMountPath(output, mountPath, "xfs")
@@ -117,7 +121,7 @@ var _ = Describe("CSI dynamic provisioning Test", func() {
 		err = utils.DeletePVC(ctx, tc.Cs.(*kubernetes.Clientset), testNameSpaceName, testDeletePVCName)
 		Expect(err).NotTo(HaveOccurred())
 
-		By("delete the retain storage class")
+		By("delete the xfs storage class")
 		err = utils.DeleteStorageClass(ctx, tc.Cs.(*kubernetes.Clientset), storageClassXfs)
 		Expect(err).NotTo(HaveOccurred())
 

@@ -2,7 +2,7 @@ package e2e
 
 import (
 	"context"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/vmware/cloud-director-named-disk-csi-driver/pkg/vcdtypes"
 	"github.com/vmware/cloud-director-named-disk-csi-driver/tests/utils"
@@ -26,22 +26,24 @@ var _ = Describe("CSI static provisioning Test", func() {
 		pvDeleted bool
 	)
 
-	tc, err = testingsdk.NewTestClient(&testingsdk.VCDAuthParams{
-		Host:         host,
-		OvdcName:     ovdc,
-		OrgName:      org,
-		Username:     userName,
-		RefreshToken: refreshToken,
-		UserOrg:      userOrg,
-		GetVdcClient: true,
-	}, rdeId)
-	Expect(err).NotTo(HaveOccurred())
-	Expect(tc).NotTo(BeNil())
-	Expect(&tc.Cs).NotTo(BeNil())
-
 	ctx := context.TODO()
 
-	It("Should create the name space AND different storage classes", func() {
+	BeforeEach(func() {
+		tc, err = testingsdk.NewTestClient(&testingsdk.VCDAuthParams{
+			Host:         host,
+			OvdcName:     ovdc,
+			OrgName:      org,
+			Username:     userName,
+			RefreshToken: refreshToken,
+			UserOrg:      userOrg,
+			GetVdcClient: true,
+		}, rdeId)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(tc).NotTo(BeNil())
+		Expect(&tc.Cs).NotTo(BeNil())
+	})
+
+	It("Should create the name space AND different storage classes for static provisioning test", func() {
 		ns, err := tc.CreateNameSpace(ctx, testStaticNameSpace)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ns).NotTo(BeNil())
@@ -54,7 +56,7 @@ var _ = Describe("CSI static provisioning Test", func() {
 	})
 
 	//scenario 1: use 'Delete' retention policy. step1: create VCD named-disk and PV.
-	It("should create a disk using VCD API calls and set up a PV based on the disk", func() {
+	It("should create a disk using VCD API calls and set up a PV based on the disk with delete reclaim policy", func() {
 		By("should create the disk successfully from VCD")
 		err = utils.CreateDisk(tc.VcdClient, testDiskName, smallDiskSizeMB, defaultStorageProfile)
 		Expect(err).NotTo(HaveOccurred())
@@ -80,7 +82,7 @@ var _ = Describe("CSI static provisioning Test", func() {
 	})
 
 	//scenario 1: use 'Delete' retention policy. step2: install a deployment using the above PVC.
-	It("should create a deployment using a PVC connected to the above PV", func() {
+	It("should create a deployment using a PVC connected to the recently created PV", func() {
 		By("should create the deployment successfully")
 		deployment, err := utils.CreateDeployment(ctx, tc, testDeploymentName, testDiskName, ContainerImage, testStaticPVCName, utils.InitContainerMountPath, testStaticNameSpace)
 		Expect(err).NotTo(HaveOccurred())
@@ -92,7 +94,7 @@ var _ = Describe("CSI static provisioning Test", func() {
 	})
 
 	//scenario 1: use 'Delete' retention policy. step3: PV should not be presented in kubernetes and VCD after PVC deleted
-	It("PV should be presented in kubernetes and VCD after PVC AND Deployment is deleted", func() {
+	It("PV should not be present in kubernetes and VCD after PVC AND Deployment deletion using delete reclaim policy", func() {
 		// We should delete the Deployment first as it has a dependency on the PVC.
 		By("should delete the deployment successfully")
 		err = tc.DeleteDeployment(ctx, testStaticNameSpace, testDeploymentName)
@@ -152,7 +154,7 @@ var _ = Describe("CSI static provisioning Test", func() {
 	})
 
 	//scenario 2: use 'Retain' retention policy. step2: install a deployment using the above PVC.
-	It("should create a deployment using a PVC connected to the above PV", func() {
+	It("should create a deployment using a PVC connected to the above PV using retain policy", func() {
 		By("deployment should be created successfully")
 		deployment, err := utils.CreateDeployment(ctx, tc, testDeploymentName, testDiskName, ContainerImage, testStaticPVCName, utils.InitContainerMountPath, testStaticNameSpace)
 		Expect(err).NotTo(HaveOccurred())
@@ -164,7 +166,7 @@ var _ = Describe("CSI static provisioning Test", func() {
 	})
 
 	//scenario 2: use 'Retain' retention policy. step3: PV should be presented in kubernetes and VCD after PVC deleted
-	It("PV is present in kubernetes and VCD after PVC AND Deployment is deleted", func() {
+	It("PV is present in kubernetes and VCD after PVC AND Deployment is deleted with retain policy", func() {
 		// We should delete the Deployment first as it has a dependency on the PVC.
 		By("should delete the deployment successfully")
 		err = tc.DeleteDeployment(ctx, testStaticNameSpace, testDeploymentName)

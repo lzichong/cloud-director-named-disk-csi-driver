@@ -3,7 +3,7 @@ package e2e
 import (
 	"context"
 	"fmt"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/vmware/cloud-director-named-disk-csi-driver/pkg/vcdtypes"
 	"github.com/vmware/cloud-director-named-disk-csi-driver/tests/utils"
@@ -37,20 +37,22 @@ var _ = Describe("CSI dynamic provisioning Test", func() {
 		pvDeleted     bool
 	)
 
-	tc, err = testingsdk.NewTestClient(&testingsdk.VCDAuthParams{
-		Host:         host,
-		OvdcName:     ovdc,
-		OrgName:      org,
-		Username:     userName,
-		RefreshToken: refreshToken,
-		UserOrg:      userOrg,
-		GetVdcClient: true,
-	}, rdeId)
-	Expect(err).NotTo(HaveOccurred())
-	Expect(tc).NotTo(BeNil())
-	Expect(&tc.Cs).NotTo(BeNil())
-
 	ctx := context.TODO()
+
+	BeforeEach(func() {
+		tc, err = testingsdk.NewTestClient(&testingsdk.VCDAuthParams{
+			Host:         host,
+			OvdcName:     ovdc,
+			OrgName:      org,
+			Username:     userName,
+			RefreshToken: refreshToken,
+			UserOrg:      userOrg,
+			GetVdcClient: true,
+		}, rdeId)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(tc).NotTo(BeNil())
+		Expect(&tc.Cs).NotTo(BeNil())
+	})
 
 	It("Should create the name space AND different storage classes", func() {
 		ns, err := tc.CreateNameSpace(ctx, testNameSpaceName)

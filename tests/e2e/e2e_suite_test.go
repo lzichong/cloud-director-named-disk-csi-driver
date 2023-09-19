@@ -2,7 +2,7 @@ package e2e
 
 import (
 	"flag"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"os"
 	"testing"
@@ -56,5 +56,5 @@ var _ = BeforeSuite(func() {
 
 func TestCSIAutomation(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "CSI Testing Suite")
+	RunSpecs(t, "CSI E2E Test Suite")
 }
