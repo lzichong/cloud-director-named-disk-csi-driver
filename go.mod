@@ -6,6 +6,7 @@ require (
 	github.com/akutz/gofsutil v0.1.2
 	github.com/container-storage-interface/spec v1.4.0
 	github.com/google/uuid v1.3.0
+	github.com/onsi/ginkgo/v2 v2.9.1
 	github.com/onsi/gomega v1.27.3
 	github.com/spf13/cobra v1.1.3
 	github.com/spf13/pflag v1.0.5
@@ -25,8 +26,6 @@ require (
 	k8s.io/klog v1.0.0
 	k8s.io/klog/v2 v2.80.1
 )
-
-require github.com/onsi/ginkgo/v2 v2.9.1
 
 require (
 	github.com/antihax/optional v1.0.0 // indirect
